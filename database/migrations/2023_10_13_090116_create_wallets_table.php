@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('wallets', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('users_id')->constrained();
             $table->string('name', 128);
             $table->decimal('balance', 15, 2);
             $table->string('description');
