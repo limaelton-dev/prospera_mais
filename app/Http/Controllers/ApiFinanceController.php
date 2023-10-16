@@ -32,9 +32,11 @@ class ApiFinanceController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(int $id)
     {
-        //
+        $wallet = Wallets::find($id);
+        
+        return response()->json($wallet);
     }
 
     /**
