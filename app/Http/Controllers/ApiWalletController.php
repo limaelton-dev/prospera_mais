@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Transactions;
 use App\Models\Wallets;
 use Illuminate\Http\Request;
 
@@ -57,5 +58,24 @@ class ApiWalletController extends Controller
     {
         Wallets::destroy($wallet_id);
         return response()->noContent();
+    }
+
+    public function withdraw(int $wallet_id, Request $request)
+    {
+        $amount = $request->amount ?? 0;
+        Transactions::create([
+            'wallets_id' => $wallet_id,
+            'transaction_type' => 2,
+            'amount' => $amount,
+            'transaction_date' => date('Y-m-d'),
+            'description' => $request->description
+        ]);
+        
+        $wallet = Wallets::with('transactions')->find($wallet_id);
+        $wallet->balance = $wallet->balance - $amount;
+        $wallet->save();
+
+        return response()->json($wallet);
+
     }
 }
