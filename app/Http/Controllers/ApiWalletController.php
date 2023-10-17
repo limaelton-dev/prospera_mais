@@ -34,7 +34,7 @@ class ApiWalletController extends Controller
      */
     public function show(int $wallet_id)
     {
-        $wallet = Wallets::find($wallet_id);
+        $wallet = Wallets::with('transactions')->find($wallet_id);
         
         return response()->json($wallet);
     }
