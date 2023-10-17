@@ -10,7 +10,7 @@ class ApiFinanceController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index()
     {
         return response()->json(Wallets::all());
     }
@@ -32,9 +32,9 @@ class ApiFinanceController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(int $id)
+    public function show(int $wallet_id)
     {
-        $wallet = Wallets::find($id);
+        $wallet = Wallets::find($wallet_id);
         
         return response()->json($wallet);
     }
@@ -42,16 +42,20 @@ class ApiFinanceController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Wallets $wallet, Request $request)
     {
-        //
+        $wallet->fill($request->only(['name', 'description']));
+        $wallet->save();
+
+        return $wallet;
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(int $wallet_id)
     {
-        //
+        Wallets::destroy($wallet_id);
+        return response()->noContent();
     }
 }
