@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Wallets;
 use Illuminate\Http\Request;
 
-class ApiFinanceController extends Controller
+class ApiWalletController extends Controller
 {
     /**
      * Display a listing of the resource.
