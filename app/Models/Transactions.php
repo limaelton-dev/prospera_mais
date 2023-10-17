@@ -14,14 +14,4 @@ class Transactions extends Model
     {
         return $this->BelongsTo(Wallets::class);
     }
-
-    public function expenses(): BelongsTo
-    {
-        return $this->belongsTo(Expenses::class);
-    }
-    
-    public function revenues(): BelongsTo
-    {
-        return $this->belongsTo(Revenues::class);
-    }
 }
