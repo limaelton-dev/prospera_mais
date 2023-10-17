@@ -19,17 +19,17 @@ class Wallets extends Model
 
     public function revenues(): HasMany
     {
-        return $this->hasMany(Revenues::class, 'wallets_id');
+        return $this->hasMany(Revenues::class, 'wallets_id')->onDelete('cascade');
     }
     
     public function expenses(): HasMany
     {
-        return $this->hasMany(Expenses::class, 'wallets_id');
+        return $this->hasMany(Expenses::class, 'wallets_id')->onDelete('cascade');
     }
 
     public function transactions(): HasMany
     {
-        return $this->hasMany(Transactions::class, 'wallets_id');
+        return $this->hasMany(Transactions::class, 'wallets_id')->onDelete('cascade');
     }
 }
 

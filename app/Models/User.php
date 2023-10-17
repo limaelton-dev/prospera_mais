@@ -46,7 +46,7 @@ class User extends Authenticatable
 
     public function wallets(): HasMany
     {
-        return $this->hasMany(Wallets::class);
+        return $this->hasMany(Wallets::class)->onDelete('cascade');
     }
 
 }
