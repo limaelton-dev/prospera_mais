@@ -12,6 +12,7 @@ class Transactions extends Model
 
     protected $fillable = [
         'wallets_id',
+        'previous_balance',
         'transaction_type',
         'amount',
         'transaction_date',

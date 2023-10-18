@@ -72,14 +72,14 @@ class ApiWalletController extends Controller
 
         try {
 
-            $wallet = Wallets::with('transactions')->find($wallet_id);
+            $wallet = Wallets::find($wallet_id);
             (float)$current_balance = $wallet->balance;
             (float)$amount = $request->amount ?? 0;
 
             if($amount < $current_balance && $amount > 0) {
                 Transactions::create([
                     'wallets_id' => $wallet_id,
-                    'previous_balance' => $wallet->balance,
+                    'previous_balance' => $current_balance,
                     'transaction_type' => 2,
                     'amount' => $amount,
                     'transaction_date' => date('Y-m-d'),
@@ -96,7 +96,7 @@ class ApiWalletController extends Controller
                         'message' => 'Successful withdrawal', 
                         'data' => $wallet
                     ], 
-                    200 
+                    200
                 );
             }
 
@@ -107,10 +107,7 @@ class ApiWalletController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return response()->json(['message' => 'Server error'], 500);
-        }
-
-
-
+            return response()->json(['message' => 'Server error', $e], 500);
+        } 
     }
 }
