@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('wallets_id')->constrained()->onDelete('cascade');
+            $table->decimal('previous_balance', 15, 2);
             $table->string('transaction_type');
             $table->decimal('amount', 15, 2);
             $table->date('transaction_date');

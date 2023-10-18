@@ -85,7 +85,7 @@ class ApiWalletController extends Controller
                     'description' => $request->description
                 ]);
                 
-                $wallet->balance = $wallet->balance - $amount;
+                $wallet->balance -= $amount;
                 $wallet->save();
 
                 DB::commit();
