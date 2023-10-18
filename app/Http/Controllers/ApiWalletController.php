@@ -65,7 +65,7 @@ class ApiWalletController extends Controller
     {
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
-            'description' => 'required'
+            'description' => 'string|max:255'
         ]);
 
         DB::beginTransaction();
@@ -119,7 +119,8 @@ class ApiWalletController extends Controller
     public function deposit(int $wallet_id, Request $request)
     {
         $request->validate([
-            'amount' => 'required|numeric|min:0.01'
+            'amount' => 'required|numeric|min:0.01',
+            'description' => 'string|max:255'
         ]);
 
         DB::beginTransaction();
@@ -150,9 +151,5 @@ class ApiWalletController extends Controller
         } catch(\Exception $e) {
             return response()->json(['message' => 'Server error', $e], 500);
         }
-        
-        
-
-
     } 
 }

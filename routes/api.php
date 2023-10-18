@@ -23,5 +23,5 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 Route::resource('/wallets', ApiWalletController::class);
 
 Route::post('/register', [RegisteredUserController::class, 'store']);
-Route::post('wallets/withdraw/{id}', [ApiWalletController::class, 'withdraw']);
+Route::post('wallets/{id}/withdraw', [ApiWalletController::class, 'withdraw']);
 Route::post('wallets/{id}/deposit', [ApiWalletController::class, 'deposit']);
