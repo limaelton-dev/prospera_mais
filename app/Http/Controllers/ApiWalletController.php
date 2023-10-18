@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Transactions;
 use App\Models\Wallets;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ApiWalletController extends Controller
 {
@@ -62,20 +63,53 @@ class ApiWalletController extends Controller
 
     public function withdraw(int $wallet_id, Request $request)
     {
-        $amount = $request->amount ?? 0;
-        Transactions::create([
-            'wallets_id' => $wallet_id,
-            'transaction_type' => 2,
-            'amount' => $amount,
-            'transaction_date' => date('Y-m-d'),
-            'description' => $request->description
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'description' => 'required'
         ]);
-        
-        $wallet = Wallets::with('transactions')->find($wallet_id);
-        $wallet->balance = $wallet->balance - $amount;
-        $wallet->save();
 
-        return response()->json($wallet);
+        DB::beginTransaction();
+
+        try {
+
+            $wallet = Wallets::with('transactions')->find($wallet_id);
+            (float)$current_balance = $wallet->balance;
+            (float)$amount = $request->amount ?? 0;
+
+            if($amount < $current_balance && $amount > 0) {
+                Transactions::create([
+                    'wallets_id' => $wallet_id,
+                    'transaction_type' => 2,
+                    'amount' => $amount,
+                    'transaction_date' => date('Y-m-d'),
+                    'description' => $request->description
+                ]);
+                
+                $wallet->balance = $wallet->balance - $amount;
+                $wallet->save();
+
+                DB::commit();
+
+                return response()->json(
+                    [
+                        'message' => 'Successful withdrawal', 
+                        'data' => $wallet
+                    ], 
+                    200 
+                );
+            }
+
+            DB::rollBack();
+
+            return response()->json(['message' => 'Insufficient funds'], 422);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json(['message' => 'Server error'], 500);
+        }
+
+
 
     }
 }
