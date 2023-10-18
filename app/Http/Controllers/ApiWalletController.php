@@ -79,6 +79,7 @@ class ApiWalletController extends Controller
             if($amount < $current_balance && $amount > 0) {
                 Transactions::create([
                     'wallets_id' => $wallet_id,
+                    'previous_balance' => $wallet->balance,
                     'transaction_type' => 2,
                     'amount' => $amount,
                     'transaction_date' => date('Y-m-d'),
