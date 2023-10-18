@@ -73,6 +73,11 @@ class ApiWalletController extends Controller
         try {
 
             $wallet = Wallets::find($wallet_id);
+
+            if(!$wallet) {
+                return response()->json(['error' => 'Wallet not found'], 404);
+            }
+
             (float)$current_balance = $wallet->balance;
             (float)$amount = $request->amount ?? 0;
 
@@ -110,4 +115,44 @@ class ApiWalletController extends Controller
             return response()->json(['message' => 'Server error', $e], 500);
         } 
     }
+
+    public function deposit(int $wallet_id, Request $request)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01'
+        ]);
+
+        DB::beginTransaction();
+        
+        $wallet = Wallets::find($wallet_id);
+
+        if(!$wallet) {
+            return response()->json(['error' => 'Wallet not found'], 404);
+        }
+
+        try{
+            Transactions::create([
+                'wallets_id' => $wallet_id,
+                'previous_balance' => $wallet->balance,
+                'transaction_type' => 1,
+                'amount' => $request->amount,
+                'transaction_date' => date('Y-m-d'),
+                'description' => $request->description
+            ]);
+    
+            $wallet->balance += $request->amount;
+            $wallet->save();
+            
+            DB::commit();
+
+            return response()->json(['message' => 'Deposit made successfully', $wallet], 201);
+
+        } catch(\Exception $e) {
+            return response()->json(['message' => 'Server error', $e], 500);
+        }
+        
+        
+
+
+    } 
 }
