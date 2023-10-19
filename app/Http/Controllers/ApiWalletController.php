@@ -93,7 +93,6 @@ class ApiWalletController extends Controller
                 
                 $wallet->balance -= $amount;
                 $wallet->save();
-
                 DB::commit();
 
                 return response()->json(
@@ -106,13 +105,11 @@ class ApiWalletController extends Controller
             }
 
             DB::rollBack();
-
             return response()->json(['message' => 'Insufficient funds'], 422);
 
         } catch (\Exception $e) {
             DB::rollBack();
-
-            return response()->json(['message' => 'Server error', $e], 500);
+            return response()->json(['message' => 'Server error'], 500);
         } 
     }
 
@@ -149,7 +146,70 @@ class ApiWalletController extends Controller
             return response()->json(['message' => 'Deposit made successfully', $wallet], 201);
 
         } catch(\Exception $e) {
-            return response()->json(['message' => 'Server error', $e], 500);
+            DB::rollBack();
+            return response()->json(['message' => 'Server error'], 500);
         }
-    } 
+    }
+
+    public function transfer(int $wallet_id, Request $request)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'to_wallet_id' => 'required|numeric|min:0.01',
+            'description' => 'string|max:255'
+        ]);
+
+        DB::beginTransaction();
+
+        $from_wallet = Wallets::find($wallet_id);
+        $to_wallet = Wallets::find($request->to_wallet_id);
+
+        if(!$from_wallet) {
+            return response()->json(['message' => 'from_wallet_id not found'], 404);
+        }
+
+        if(!$to_wallet) {
+            return response()->json(['message' => 'to_wallet_id not found'], 404);
+        }
+
+        if($request->amount < $from_wallet->balance)
+        {
+            try {
+                Transactions::create([
+                    'wallets_id' => $wallet_id,
+                    'previous_balance' => $from_wallet->balance,
+                    'transaction_type' => 3,
+                    'amount' => $request->amount,
+                    'transaction_date' => date('Y-m-d'),
+                    'description' => $request->description
+                ]);
+
+                $from_wallet->balance -= $request->amount;
+                $from_wallet->save();
+
+                Transactions::create([
+                    'wallets_id' => $to_wallet->id,
+                    'previous_balance' => $to_wallet->balance,
+                    'transaction_type' => 4,
+                    'amount' => $request->amount,
+                    'transaction_date' => date('Y-m-d'),
+                    'description' => $request->description
+                ]);
+
+                $to_wallet->balance += $request->amount;
+                $to_wallet->save();
+
+                DB::commit();
+                return response()->json(['message' => 'Transfer was successful', $from_wallet], 200);
+
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return response()->json(['message' => 'Server error'], 500);
+            }
+        }
+
+        DB::rollBack();
+        return response()->json(['message' => 'Insufficient funds'], 422);
+
+    }
 }

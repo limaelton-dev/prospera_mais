@@ -25,3 +25,4 @@ Route::resource('/wallets', ApiWalletController::class);
 Route::post('/register', [RegisteredUserController::class, 'store']);
 Route::post('wallets/{id}/withdraw', [ApiWalletController::class, 'withdraw']);
 Route::post('wallets/{id}/deposit', [ApiWalletController::class, 'deposit']);
+Route::post('wallets/{id}/transfer', [ApiWalletController::class, 'transfer']);
