@@ -22,15 +22,15 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
-    
+
     Route::resource('/wallets', ApiWalletController::class);
-    Route::post('/register', [RegisteredUserController::class, 'store']);
     Route::post('wallets/{id}/withdraw', [ApiWalletController::class, 'withdraw']);
     Route::post('wallets/{id}/deposit', [ApiWalletController::class, 'deposit']);
     Route::post('wallets/{id}/transfer', [ApiWalletController::class, 'transfer']);
-
+    
 });
 
+Route::post('/register', [RegisteredUserController::class, 'store']);
 Route::post('/login', function (Request $request) {
     $credentials = $request->only(['email', 'password']);
     
@@ -39,6 +39,7 @@ Route::post('/login', function (Request $request) {
     }
 
     $user = Auth::user();
+    $user->tokens()->delete();
     $token = $user->createToken('token');
 
     return response()->json($token->plainTextToken);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Transactions;
 use App\Models\Wallets;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -12,9 +13,15 @@ class ApiWalletController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Authenticatable $user)
     {
-        return response()->json(Wallets::all());
+        $user_wallets = Wallets::where('users_id', $user->id)->get();
+
+        if ($user_wallets->isEmpty()) {
+            return response()->json(['message' => 'No wallets for this user'], 404);
+        }
+        
+        return response()->json($user_wallets);
     }
 
     /**
@@ -22,6 +29,7 @@ class ApiWalletController extends Controller
      */
     public function store(Request $request)
     {
+        //aqui, ainda preciso verificar se o usuário é admin
         $response = Wallets::create([
             'users_id' => $request->users_id,
             'name' => $request->name,
@@ -153,6 +161,8 @@ class ApiWalletController extends Controller
 
     public function transfer(int $wallet_id, Request $request)
     {
+        dd($user->tokenCan('is_admin'));
+
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
             'to_wallet_id' => 'required|numeric|min:0.01',
