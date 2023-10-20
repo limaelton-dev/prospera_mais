@@ -42,11 +42,17 @@ class ApiWalletController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(int $wallet_id)
+    public function show(int $wallet_id, Authenticatable $user)
     {
-        $wallet = Wallets::with('transactions')->find($wallet_id);
+        $wallet = Wallets::where('user_id', $user->id)
+                        ->with('transactions')
+                        ->find($wallet_id);
+
+        if ($wallet->isEmpty()) {
+            return response()->json(['message' => 'No wallet found'], 404);
+        }
         
-        return response()->json($wallet);
+        return response()->json($wallet, 200);
     }
 
     /**
