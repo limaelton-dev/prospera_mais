@@ -44,11 +44,11 @@ class ApiWalletController extends Controller
      */
     public function show(int $wallet_id, Authenticatable $user)
     {
-        $wallet = Wallets::where('user_id', $user->id)
+        $wallet = Wallets::where('users_id', $user->id)
                         ->with('transactions')
                         ->find($wallet_id);
 
-        if ($wallet->isEmpty()) {
+        if (!$wallet) {
             return response()->json(['message' => 'No wallet found'], 404);
         }
         
