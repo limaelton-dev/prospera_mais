@@ -27,11 +27,11 @@ class ApiWalletController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, Authenticatable $user)
     {
         //aqui, ainda preciso verificar se o usuário é admin
         $response = Wallets::create([
-            'users_id' => $request->users_id,
+            'users_id' => $user->id,
             'name' => $request->name,
             'balance' => $request->balance,
             'description' => $request->description
@@ -69,9 +69,22 @@ class ApiWalletController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(int $wallet_id)
+    public function destroy(int $wallet_id, Authenticatable $user)
     {
-        Wallets::destroy($wallet_id);
+        //fazer validação dos dados!!
+        if (!$user) {
+            return response()->json(['error_message' => 'Unauthenticated user'], 401);
+        }
+
+        $wallet = Wallets::find($wallet_id)->where('users_id', $user->id);
+
+        if(!$wallet) {
+            return response()->json(['error_message' => 'No wallet found']);
+        }
+
+        $wallet->delete();
+        $wallet->save();
+
         return response()->noContent();
     }
 
