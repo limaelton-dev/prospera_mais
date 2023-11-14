@@ -29,13 +29,13 @@ class ApiWalletController extends Controller
      */
     public function store(Request $request, Authenticatable $user)
     {
-        //aqui, ainda preciso verificar se o usuário é admin
         $response = Wallets::create([
             'users_id' => $user->id,
             'name' => $request->name,
             'balance' => $request->balance,
             'description' => $request->description
         ]);
+
         return response()->json($response, 201);
     }
 
@@ -58,8 +58,21 @@ class ApiWalletController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Wallets $wallet, Request $request)
+    public function update(Authenticatable $user, Wallets $wallet, Request $request)
     {
+        if (!$user) {
+            return response()->json(['error_message' => 'Unauthenticated user'], 401);
+        }
+
+        if (!$wallet) {
+            return response()->json(['error_message' => 'Wallet not found'], 404);
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'string|max:255'
+        ]);
+
         $wallet->fill($request->only(['name', 'description']));
         $wallet->save();
 
@@ -95,16 +108,15 @@ class ApiWalletController extends Controller
             'description' => 'string|max:255'
         ]);
 
+        $wallet = Wallets::find($wallet_id);
+
+        if(!$wallet) {
+            return response()->json(['error' => 'Wallet not found'], 404);
+        }
+
         DB::beginTransaction();
 
         try {
-
-            $wallet = Wallets::find($wallet_id);
-
-            if(!$wallet) {
-                return response()->json(['error' => 'Wallet not found'], 404);
-            }
-
             (float)$current_balance = $wallet->balance;
             (float)$amount = $request->amount ?? 0;
 
@@ -147,13 +159,14 @@ class ApiWalletController extends Controller
             'description' => 'string|max:255'
         ]);
 
-        DB::beginTransaction();
         
         $wallet = Wallets::find($wallet_id);
-
+        
         if(!$wallet) {
             return response()->json(['error' => 'Wallet not found'], 404);
         }
+
+        DB::beginTransaction();
 
         try{
             Transactions::create([
@@ -178,9 +191,9 @@ class ApiWalletController extends Controller
         }
     }
 
-    public function transfer(int $wallet_id, Request $request)
+    public function transfer(Authenticatable $user, $wallet_id, Request $request)
     {
-        dd($user->tokenCan('is_admin'));
+        
 
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
@@ -188,19 +201,19 @@ class ApiWalletController extends Controller
             'description' => 'string|max:255'
         ]);
 
-        DB::beginTransaction();
-
-        $from_wallet = Wallets::find($wallet_id);
+        $from_wallet = Wallets::where('users_id', $user->id)->find($wallet_id);;
         $to_wallet = Wallets::find($request->to_wallet_id);
-
+        
         if(!$from_wallet) {
             return response()->json(['message' => 'from_wallet_id not found'], 404);
         }
-
+        
         if(!$to_wallet) {
             return response()->json(['message' => 'to_wallet_id not found'], 404);
         }
 
+        DB::beginTransaction();
+        
         if($request->amount < $from_wallet->balance)
         {
             try {
@@ -238,6 +251,7 @@ class ApiWalletController extends Controller
         }
 
         DB::rollBack();
+
         return response()->json(['message' => 'Insufficient funds'], 422);
 
     }
