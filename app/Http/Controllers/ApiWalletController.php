@@ -15,7 +15,7 @@ class ApiWalletController extends Controller
      */
     public function index(Authenticatable $user)
     {
-        $user_wallets = Wallets::where('users_id', $user->id)->get();
+        $user_wallets = Wallets::get();
 
         if ($user_wallets->isEmpty()) {
             return response()->json(['message' => 'No wallets for this user'], 404);
@@ -29,6 +29,12 @@ class ApiWalletController extends Controller
      */
     public function store(Request $request, Authenticatable $user)
     {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'balance' => 'required|numeric|min:0.01',
+            'description' => 'string|max:255'
+        ]);
+
         $response = Wallets::create([
             'users_id' => $user->id,
             'name' => $request->name,
@@ -58,11 +64,9 @@ class ApiWalletController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Authenticatable $user, Wallets $wallet, Request $request)
+    public function update(Authenticatable $user, int $wallet_id, Request $request)
     {
-        if (!$user) {
-            return response()->json(['error_message' => 'Unauthenticated user'], 401);
-        }
+        $wallet = Wallets::where('users_id', $$user->id)->find($wallet_id);
 
         if (!$wallet) {
             return response()->json(['error_message' => 'Wallet not found'], 404);
@@ -84,12 +88,10 @@ class ApiWalletController extends Controller
      */
     public function destroy(int $wallet_id, Authenticatable $user)
     {
-        //fazer validação dos dados!!
-        if (!$user) {
-            return response()->json(['error_message' => 'Unauthenticated user'], 401);
-        }
 
-        $wallet = Wallets::find($wallet_id)->where('users_id', $user->id);
+        $wallet = Wallets::where('users_id', $user->id)
+                        ->where('id', $wallet_id)
+                        ->first();
 
         if(!$wallet) {
             return response()->json(['error_message' => 'No wallet found']);
@@ -193,8 +195,6 @@ class ApiWalletController extends Controller
 
     public function transfer(Authenticatable $user, $wallet_id, Request $request)
     {
-        
-
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
             'to_wallet_id' => 'required|numeric|min:0.01',
